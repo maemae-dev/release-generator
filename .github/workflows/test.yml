@@ -36,5 +36,5 @@ jobs:
       - uses: ./
         with:
           version: ${{ github.event.inputs.version }}
-          branch: ${{ github.event.inputs.version }}
+          branch: ${{ github.event.inputs.branch }}
           token: ${{ secrets.GITHUB_TOKEN }}
