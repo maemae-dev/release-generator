@@ -15,6 +15,9 @@ on:
         default: "v1.0.0"
         # Input has to be provided for the workflow to run
         required: true
+      branch:
+        description: "target branch"
+        required: true
 
 jobs:
   # unit tests
@@ -33,4 +36,5 @@ jobs:
       - uses: ./
         with:
           version: ${{ github.event.inputs.version }}
+          branch: ${{ github.event.inputs.version }}
           token: ${{ secrets.GITHUB_TOKEN }}

@@ -2,7 +2,10 @@ name: "Wait"
 description: "Wait a designated number of milliseconds"
 inputs:
   version: # id of input
-    description: "number of milliseconds to wait"
+    description: "target version (same as milestone name)"
+    required: true
+  branch:
+    description: "target branch"
     required: true
   token:
     description: "your github token"

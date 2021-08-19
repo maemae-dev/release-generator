@@ -11,36 +11,53 @@ let test = async (version) => {
   }
   const octokit = github.getOctokit(token);
 
-  const repo = await octokit.rest.repos.get({
-    owner: github.context.repo.owner,
-    repo: github.context.repo.repo,
-  });
-  core.info(`${repo.data.name}`);
+  const branch = core.getInput("branch");
+  if (typeof branch !== "string") {
+    throw new Error("branch not a string");
+  }
+
+  const version_without_v = version.substring(1, version.length);
 
   for await (const response of octokit.paginate.iterator(
     octokit.rest.issues.listForRepo,
     {
       owner: github.context.repo.owner,
       repo: github.context.repo.repo,
-      milestone: 1,
+      milestone: version,
     }
   )) {
     const issues = response.data;
-    console.log(issues.length);
+    if (issues.length === 0) {
+      throw new Error("no results for issues");
+    }
+
+    const labels = issues
+      .map((i) => i.labels)
+      .flatMap()
+      .reduce(
+        (labels, l) => (labels.indexOf(l) > 0 ? labels : labels.concat(l)),
+        []
+      );
+
+    const description = labels.reduce((body, l) => {
+      const title = `## ${l.name} ${l.description}\n`;
+      const issuesForLabel = issues
+        .filter((i) => i.labels.includes(l))
+        .map((i) => `- ${i.title} #${i.number} by ${i.user.name}\n`);
+      const section = title.concat(...issuesForLabel);
+      return body.concat(section);
+    }, "");
+
+    await octokit.rest.repos.createRelease({
+      owner: github.context.repo.owner,
+      repo: github.context.repo.repo,
+      tag_name: version,
+      name: `Release ${version_without_v}`,
+      target_commitish: branch,
+      draft: true,
+      body: description,
+    });
   }
-
-  // for await (const response of octokit.paginate.iterator(
-  //   octokit.rest.issues.listMilestones,
-  //   { owner: github.context.repo.owner, repo: github.context.repo.repo }
-  // )) {
-  //   const milestones = response.data;
-  //   const filtered = milestones.filter((m) => m.title === version);
-  //   if (filtered.length === 0) return;
-  //   const milestone = filtered[0];
-  //   core.info(milestone.number);
-  // 	milestone.c
-
-  // }
 };
 
 module.exports = test;
