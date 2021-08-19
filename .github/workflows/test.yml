@@ -1,40 +1,20 @@
-name: "units-test"
+name: generate_release
 on:
-  # pull_request:
-  # push:
-  #   branches:
-  #     - main
-  #     - "releases/*"
   workflow_dispatch:
-    # Inputs the workflow accepts.
     inputs:
       version:
-        # Friendly description to be shown in the UI instead of 'name'
         description: "Version name"
-        # Default value if no value is explicitly provided
         default: "v1.0.0"
-        # Input has to be provided for the workflow to run
-        required: true
-      branch:
-        description: "target branch"
         required: true
 
 jobs:
-  # unit tests
-  units:
+  generate:
+    timeout-minutes: 1
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: npm ci
-      - run: npm test
-
-  # test action works running from the graph
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./
+      - uses: maemae-dev/release-generator@main
         with:
           version: ${{ github.event.inputs.version }}
-          branch: ${{ github.event.inputs.branch }}
+          branch: ${{ github.head_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,7 +1,7 @@
 name: "Wait"
 description: "Wait a designated number of milliseconds"
 inputs:
-  version: # id of input
+  version:
     description: "target version (same as milestone name)"
     required: true
   branch:
