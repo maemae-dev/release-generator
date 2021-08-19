@@ -59,7 +59,7 @@ let test = async (version) => {
   core.info(`${repo.data.name}`);
 
   for await (const response of octokit.paginate.iterator(
-    octokit.rest.issues.list,
+    octokit.rest.issues.listForRepo,
     {
       owner: github.context.repo.owner,
       repo: github.context.repo.repo,
