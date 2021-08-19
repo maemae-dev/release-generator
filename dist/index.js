@@ -59,16 +59,29 @@ let test = async (version) => {
   core.info(`${repo.data.name}`);
 
   for await (const response of octokit.paginate.iterator(
-    octokit.rest.issues.listMilestones,
-    { owner: github.context.repo.owner, repo: github.context.repo.repo }
-  )) {
-    const milestones = response.data;
-    const filtered = milestones.filter((m) => m.title === version);
-    if (filtered.length !== 0) {
-      const milestone = filtered[0];
-      core.info(milestone.number);
+    octokit.rest.issues.list,
+    {
+      owner: github.context.repo.owner,
+      repo: github.context.repo.repo,
+      milestone: version,
     }
+  )) {
+    const issues = response.data;
+    console.log(issues.length);
   }
+
+  // for await (const response of octokit.paginate.iterator(
+  //   octokit.rest.issues.listMilestones,
+  //   { owner: github.context.repo.owner, repo: github.context.repo.repo }
+  // )) {
+  //   const milestones = response.data;
+  //   const filtered = milestones.filter((m) => m.title === version);
+  //   if (filtered.length === 0) return;
+  //   const milestone = filtered[0];
+  //   core.info(milestone.number);
+  // 	milestone.c
+
+  // }
 };
 
 module.exports = test;
