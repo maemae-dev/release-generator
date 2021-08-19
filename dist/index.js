@@ -100,8 +100,10 @@ let test = async (version) => {
       const description = labels.reduce((body, l) => {
         const title = `## ${l.name}: ${l.description}\n`;
         const issuesForLabel = issues
-          .filter((i) => i.labels.includes(l))
-          .map((i) => `- ${i.title} #${i.number} by ${i.creator.name}\n`);
+          .filter(
+            (i) => i.labels.filter((issueLabel) => l.name === issueLabel) > 0
+          )
+          .map((i) => `- ${i.title} #${i.number} by ${i.user.login}\n`);
         const section = title.concat(...issuesForLabel);
         return body.concat(section);
       }, "");
