@@ -63,7 +63,7 @@ let test = async (version) => {
     {
       owner: github.context.repo.owner,
       repo: github.context.repo.repo,
-      milestone: version,
+      milestone: 1,
     }
   )) {
     const issues = response.data;
