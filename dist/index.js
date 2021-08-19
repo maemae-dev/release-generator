@@ -57,8 +57,6 @@ let test = async (version) => {
     throw new Error("branch not a string");
   }
 
-  const version_without_v = version.substring(1, version.length);
-
   for await (const response of octokit.paginate.iterator(
     octokit.rest.issues.listForRepo,
     {
@@ -88,6 +86,8 @@ let test = async (version) => {
       const section = title.concat(...issuesForLabel);
       return body.concat(section);
     }, "");
+
+    const version_without_v = version.slice(1, version.length);
 
     await octokit.rest.repos.createRelease({
       owner: github.context.repo.owner,
