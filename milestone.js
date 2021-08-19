@@ -64,7 +64,7 @@ let test = async (version) => {
               i.labels.filter((issueLabel) => l.name === issueLabel.name)
                 .length > 0
           )
-          .map((i) => `- ${i.title} #${i.number} by ${i.user.login}\n`);
+          .map((i) => `- **${i.title}** #${i.number} by ${i.user.login}\n`);
         const section = title.concat(...issuesForLabel);
         return body.concat(section);
       }, "");
