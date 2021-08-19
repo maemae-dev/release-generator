@@ -13,7 +13,7 @@ let test = async (version) => {
   const octokit =	github.getOctokit(token);
 
 	const repo = await octokit.rest.repos.get({owner: github.context.repo.owner, repo: github.context.repo.repo});
-	core.info(repo);
+	core.info(`${repo}`);
 
 };
 
