@@ -16,12 +16,28 @@ let test = async (version) => {
     throw new Error("branch not a string");
   }
 
+  let milestone;
+
+  for await (const response of octokit.paginate.iterator(
+    octokit.rest.issues.listMilestones,
+    {
+      owner: github.context.repo.owner,
+      repo: github.context.repo.repo,
+    }
+  )) {
+    const milestones = response.data.filter((m) => m.title === version);
+    if (milestones.length === 0) {
+      throw new Error("no results for milestones");
+    }
+    milestone = milestones[0];
+  }
+
   for await (const response of octokit.paginate.iterator(
     octokit.rest.issues.listForRepo,
     {
       owner: github.context.repo.owner,
       repo: github.context.repo.repo,
-      milestone: version,
+      milestone: milestone.number,
     }
   )) {
     const issues = response.data;
