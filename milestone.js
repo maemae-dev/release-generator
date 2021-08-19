@@ -37,6 +37,7 @@ let test = async (version) => {
         owner: github.context.repo.owner,
         repo: github.context.repo.repo,
         milestone: milestone.number,
+        state: "closed",
       }
     )) {
       const issues = response.data;
