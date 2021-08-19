@@ -60,7 +60,8 @@ let test = async (version) => {
         const title = `## ${l.name}: ${l.description}\n`;
         const issuesForLabel = issues
           .filter(
-            (i) => i.labels.filter((issueLabel) => l.name === issueLabel) > 0
+            (i) =>
+              i.labels.filter((issueLabel) => l.name === issueLabel).length > 0
           )
           .map((i) => `- ${i.title} #${i.number} by ${i.user.login}\n`);
         const section = title.concat(...issuesForLabel);
