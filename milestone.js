@@ -47,7 +47,7 @@ let test = async (version) => {
 
       const labels = issues
         .map((i) => i.labels)
-        .flatMap()
+        .flatMap((i) => i)
         .reduce(
           (labels, l) => (labels.indexOf(l) > 0 ? labels : labels.concat(l)),
           []
