@@ -49,15 +49,18 @@ let test = async (version) => {
         .map((i) => i.labels)
         .flatMap((i) => i)
         .reduce(
-          (labels, l) => (labels.indexOf(l) > 0 ? labels : labels.concat(l)),
+          (labels, l) =>
+            labels.filter((v) => v.name === l.name).length > 0
+              ? labels
+              : labels.concat(l),
           []
         );
 
       const description = labels.reduce((body, l) => {
-        const title = `## ${l.name} ${l.description}\n`;
+        const title = `## ${l.name}: ${l.description}\n`;
         const issuesForLabel = issues
           .filter((i) => i.labels.includes(l))
-          .map((i) => `- ${i.title} #${i.number} by ${i.user.name}\n`);
+          .map((i) => `- ${i.title} #${i.number} by ${i.creator.name}\n`);
         const section = title.concat(...issuesForLabel);
         return body.concat(section);
       }, "");
