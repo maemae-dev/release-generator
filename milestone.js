@@ -69,7 +69,7 @@ let test = async (version) => {
         repo: github.context.repo.repo,
         tag_name: version,
         name: `Release ${version_without_v}`,
-        target_commitish: branch,
+        target_commitish: `${branch}`,
         draft: true,
         body: description,
       });
