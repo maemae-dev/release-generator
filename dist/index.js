@@ -57,8 +57,6 @@ let test = async (version) => {
     throw new Error("branch not a string");
   }
 
-  let milestone;
-
   for await (const response of octokit.paginate.iterator(
     octokit.rest.issues.listMilestones,
     {
@@ -70,50 +68,52 @@ let test = async (version) => {
     if (milestones.length === 0) {
       throw new Error("no results for milestones");
     }
-    milestone = milestones[0];
-  }
+    const milestone = milestones[0];
 
-  for await (const response of octokit.paginate.iterator(
-    octokit.rest.issues.listForRepo,
-    {
-      owner: github.context.repo.owner,
-      repo: github.context.repo.repo,
-      milestone: milestone.number,
+    core.info(`Start create release for milestone ${milestone.title}`);
+
+    for await (const response of octokit.paginate.iterator(
+      octokit.rest.issues.listForRepo,
+      {
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        milestone: milestone.number,
+      }
+    )) {
+      const issues = response.data;
+      if (issues.length === 0) {
+        throw new Error("no results for issues");
+      }
+
+      const labels = issues
+        .map((i) => i.labels)
+        .flatMap()
+        .reduce(
+          (labels, l) => (labels.indexOf(l) > 0 ? labels : labels.concat(l)),
+          []
+        );
+
+      const description = labels.reduce((body, l) => {
+        const title = `## ${l.name} ${l.description}\n`;
+        const issuesForLabel = issues
+          .filter((i) => i.labels.includes(l))
+          .map((i) => `- ${i.title} #${i.number} by ${i.user.name}\n`);
+        const section = title.concat(...issuesForLabel);
+        return body.concat(section);
+      }, "");
+
+      const version_without_v = version.slice(1, version.length);
+
+      await octokit.rest.repos.createRelease({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        tag_name: version,
+        name: `Release ${version_without_v}`,
+        target_commitish: branch,
+        draft: true,
+        body: description,
+      });
     }
-  )) {
-    const issues = response.data;
-    if (issues.length === 0) {
-      throw new Error("no results for issues");
-    }
-
-    const labels = issues
-      .map((i) => i.labels)
-      .flatMap()
-      .reduce(
-        (labels, l) => (labels.indexOf(l) > 0 ? labels : labels.concat(l)),
-        []
-      );
-
-    const description = labels.reduce((body, l) => {
-      const title = `## ${l.name} ${l.description}\n`;
-      const issuesForLabel = issues
-        .filter((i) => i.labels.includes(l))
-        .map((i) => `- ${i.title} #${i.number} by ${i.user.name}\n`);
-      const section = title.concat(...issuesForLabel);
-      return body.concat(section);
-    }, "");
-
-    const version_without_v = version.slice(1, version.length);
-
-    await octokit.rest.repos.createRelease({
-      owner: github.context.repo.owner,
-      repo: github.context.repo.repo,
-      tag_name: version,
-      name: `Release ${version_without_v}`,
-      target_commitish: branch,
-      draft: true,
-      body: description,
-    });
   }
 };
 
