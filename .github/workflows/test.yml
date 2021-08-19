@@ -1,10 +1,20 @@
 name: "units-test"
 on:
-  pull_request:
-  push:
-    branches:
-      - main
-      - "releases/*"
+  # pull_request:
+  # push:
+  #   branches:
+  #     - main
+  #     - "releases/*"
+  workflow_dispatch:
+    # Inputs the workflow accepts.
+    inputs:
+      version:
+        # Friendly description to be shown in the UI instead of 'name'
+        description: "Version name"
+        # Default value if no value is explicitly provided
+        default: "v1.0.0"
+        # Input has to be provided for the workflow to run
+        required: true
 
 jobs:
   # unit tests
@@ -22,5 +32,5 @@ jobs:
       - uses: actions/checkout@v2
       - uses: ./
         with:
-          version: v0.0.1
+          version: ${{ github.event.inputs.version }}
           token: ${{ secrets.GITHUB_TOKEN }}
