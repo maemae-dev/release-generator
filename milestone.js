@@ -41,6 +41,29 @@ const createRelease = async (version, branch, body) => {
   });
 }
 
+const fetchListMilestones = async (octokit, {owner, repo}) => {
+  return octokit.paginate.iterator(
+    octokit.rest.issues.listMilestones,
+    {
+      owner: owner,
+      repo: repo,
+    }
+  );
+}
+
+const fetchListForRepo = async (octokit, {owner, repo, mileStoneNumber}) => {
+  return octokit.paginate.iterator(
+    octokit.rest.issues.listForRepo,
+    {
+      owner: owner,
+      repo: repo,
+      milestone: mileStoneNumber,
+      state: "closed",
+      per_page: 100
+    }
+  )
+}
+
 let milestone = async (version) => {
   if (typeof version !== "string") {
     throw new Error("version not a string");
@@ -56,11 +79,8 @@ let milestone = async (version) => {
     throw new Error("branch not a string");
   }
 
-  // 
-
-  for await (const response of octokit.paginate.iterator(
-    octokit.rest.issues.listMilestones,
-    {
+  for await (const response of fetchListMilestones(
+    octokit, {
       owner: github.context.repo.owner,
       repo: github.context.repo.repo,
     }
@@ -73,14 +93,11 @@ let milestone = async (version) => {
 
     core.info(`Start create release for milestone ${milestone.title}`);
 
-    for await (const response of octokit.paginate.iterator(
-      octokit.rest.issues.listForRepo,
-      {
+    for await (const response of fetchListForRepo(
+      octokit, {
         owner: github.context.repo.owner,
         repo: github.context.repo.repo,
-        milestone: milestone.number,
-        state: "closed",
-        per_page: 100
+        mileStoneNumber: milestone.number,
       }
     )) {
       const issues = response.data;
@@ -99,6 +116,8 @@ let milestone = async (version) => {
           []
         );
 
+      
+      
       const description = createDescription(labels);
       await createRelease(version, branch, description);
     }
