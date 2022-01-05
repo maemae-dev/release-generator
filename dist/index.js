@@ -79,7 +79,6 @@ let test = async (version) => {
         repo: github.context.repo.repo,
         milestone: milestone.number,
         state: "closed",
-        per_page: 100
       }
     )) {
       const issues = response.data;
@@ -88,8 +87,8 @@ let test = async (version) => {
       }
 
       const labels = issues
-        .map((issue) => issue.labels)
-        .flatMap((issue) => issue)
+        .map((i) => i.labels)
+        .flatMap((i) => i)
         .reduce(
           (labels, l) =>
             labels.filter((v) => v.name === l.name).length > 0
@@ -97,48 +96,34 @@ let test = async (version) => {
               : labels.concat(l),
           []
         );
-      
-      const description = createDescription(labels);
-      await createRelease(version, branch, description);
+
+      const description = labels.reduce((body, l) => {
+        const title = `## ${l.name}: ${l.description}\n`;
+        const issuesForLabel = issues
+          .filter(
+            (i) =>
+              i.labels.filter((issueLabel) => l.name === issueLabel.name)
+                .length > 0
+          )
+          .map((i) => `- **${i.title}** #${i.number} by ${i.user.login}\n`);
+        const section = title.concat(...issuesForLabel);
+        return body.concat(section);
+      }, "");
+
+      const version_without_v = version.slice(1, version.length);
+
+      await octokit.rest.repos.createRelease({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        tag_name: version,
+        name: `Release ${version_without_v}`,
+        target_commitish: `${branch}`,
+        draft: true,
+        body: description,
+      });
     }
   }
 };
-
-const createDescription = (labels) => {  
-  const labelSections = labels.reduce((body, label) => {
-    const title = `## ${label.name}: ${label.description}\n`;
-    const issuesForLabel = issues
-      .filter(
-        (issue) =>
-          issue.labels.filter((issueLabel) => label.name === issueLabel.name)
-            .length > 0
-      )
-      .map((i) => `- **${issue.title}** #${issue.number} by ${issue.user.login}\n`);
-    const section = title.concat(...issuesForLabel);
-    return body.concat(section);
-  }, "")
-
-  const labelEmptyIssues = issues
-    .filter((issue) => issue.labels.length === 0)
-    .map((i) => `- **${issue.title}** #${issue.number} by ${issue.user.login}\n`);
-  
-  const title = "## label is empty\n";
-  const emptySection = title.concat(...labelEmptyIssues);
-  return labelSections + emptySection;
-}
-
-const createRelease = async (version, branch, body) => {
-  const version_without_v = version.slice(1, version.length)
-  return octokit.rest.repos.createRelease({
-    owner: github.context.repo.owner,
-    repo: github.context.repo.repo,
-    tag_name: version,
-    name: `Release ${version_without_v}`,
-    target_commitish: `${branch}`,
-    draft: true,
-    body: body,
-  });
-}
 
 module.exports = test;
 
