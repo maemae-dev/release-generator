@@ -1,6 +1,9 @@
 const github = require("@actions/github");
 const core = require("@actions/core");
 
+const issueSentence = (issue) => {
+  return `- **${issue.title}** #${issue.number} by ${issue.user.login}\n`
+}
 const createDescription = (labels) => {  
   const labelSections = labels.reduce((body, label) => {
     const title = `## ${label.name}: ${label.description}\n`;
@@ -10,14 +13,14 @@ const createDescription = (labels) => {
           issue.labels.filter((issueLabel) => label.name === issueLabel.name)
             .length > 0
       )
-      .map((i) => `- **${issue.title}** #${issue.number} by ${issue.user.login}\n`);
+      .map((issue) => issueSentence(issue));
     const section = title.concat(...issuesForLabel);
     return body.concat(section);
   }, "")
 
   const labelEmptyIssues = issues
     .filter((issue) => issue.labels.length === 0)
-    .map((i) => `- **${issue.title}** #${issue.number} by ${issue.user.login}\n`);
+    .map((issue) => issueSentence(issue));
 
   const title = "## label is empty\n";
   const emptySection = title.concat(...labelEmptyIssues);
