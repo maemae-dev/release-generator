@@ -4,6 +4,7 @@ const core = require("@actions/core");
 const issueSentence = (issue) => {
   return `- **${issue.title}** #${issue.number} by ${issue.user.login}\n`
 }
+
 const createDescription = (labels) => {  
   const labelSections = labels.reduce((body, label) => {
     const title = `## ${label.name}: ${label.description}\n`;
@@ -40,7 +41,7 @@ const createRelease = async (version, branch, body) => {
   });
 }
 
-let test = async (version) => {
+let milestone = async (version) => {
   if (typeof version !== "string") {
     throw new Error("version not a string");
   }
@@ -54,6 +55,8 @@ let test = async (version) => {
   if (typeof branch !== "string") {
     throw new Error("branch not a string");
   }
+
+  // 
 
   for await (const response of octokit.paginate.iterator(
     octokit.rest.issues.listMilestones,
@@ -102,4 +105,4 @@ let test = async (version) => {
   }
 };
 
-module.exports = test;
+module.exports = milestone;
