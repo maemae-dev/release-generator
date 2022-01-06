@@ -153,8 +153,10 @@ const generateReleaseNote = async (version) => {
       []
     );
 
-  const description = createDescription(labels);
-  await createRelease(version, branch, description);
+    core.info(`labels length = ${labels.length}`);
+    const description = createDescription(labels);
+    core.info(description);
+  // await createRelease(version, branch, description);
 };
 
 module.exports = generateReleaseNote;
