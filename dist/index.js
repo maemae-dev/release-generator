@@ -71,6 +71,7 @@ let test = async (version) => {
     const milestone = milestones[0];
 
     core.info(`Start create release for milestone ${milestone.title}`);
+    core.info(`yamadaaaa`);
 
     for await (const response of octokit.paginate.iterator(
       octokit.rest.issues.listForRepo,
