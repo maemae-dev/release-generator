@@ -94,10 +94,13 @@ const createRelease = async (version, branch, body) => {
  * @returns milestone: object
  */
 const fetchTargetMilestone = async (octokit, {version, owner, repo}) => {
-  const responses = await octokit.rest.issues.listMilestones({
-    owner: owner,
-    repo: repo,
-  })
+  const responses =  await octokit.paginate(
+    octokit.rest.issues.listMilestones,
+    {
+      owner: owner,
+      repo: repo,
+    }
+  );
 
   const targetMilestone = responses.reduce((ms, response) => {
     if(ms) return ms;
