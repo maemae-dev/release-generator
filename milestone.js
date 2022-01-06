@@ -101,6 +101,7 @@ const fetchIssues = async (
       per_page: 100
     }
   )
+  core.info(`response length = ${responses.length}`);
   return responses.map((res) => res.data).flat();
 }
 
@@ -134,6 +135,8 @@ const generateReleaseNote = async (version) => {
       mileStoneNumber: milestone.number,
     }
   )
+
+  core.info(`target length = ${issues.length}`);
 
   if (issues.length === 0) {
     throw new Error("no results for issues");
