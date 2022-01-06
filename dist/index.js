@@ -93,7 +93,7 @@ const createRelease = async (version, branch, body) => {
  * }  
  * @returns milestone: object
  */
-const fetchTargetMilestone = async (octokit, {owner, repo}) => {
+const fetchTargetMilestone = async (octokit, {version, owner, repo}) => {
   const responses =  await octokit.paginate.iterator(
     octokit.rest.issues.listMilestones,
     {
@@ -163,6 +163,7 @@ const generateReleaseNote = async (version) => {
 
   const milestone = fetchTargetMilestone(
       octokit, {
+      version: version,
       owner: github.context.repo.owner,
       repo: github.context.repo.repo,
     })
