@@ -102,18 +102,18 @@ const fetchTargetMilestone = async (octokit, {owner, repo}) => {
     }
   );
 
-  const milestone = responses.reduce((milestone, response) => {
-    if(milestone) return milestone;
+  const targetMilestore = responses.reduce((ms, response) => {
+    if(ms) return ms;
     const milestones = response.data.filter((m) => m.title === version);
 
-    const milestone = milestones[0];
-    return milestone;
+    const ms = milestones[0];
+    return ms;
   }, null);
 
-  if(!milestone) {
+  if(!targetMilestore) {
     throw new Error("milestone is not found");
   }
-  return milestone;
+  return targetMilestore;
 }
 
 /**
