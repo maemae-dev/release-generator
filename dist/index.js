@@ -163,7 +163,7 @@ const generateReleaseNote = async (version) => {
     throw new Error("branch not a string");
   }
 
-  const milestone = fetchTargetMilestone(
+  const milestone = await fetchTargetMilestone(
       octokit, {
       version: version,
       owner: github.context.repo.owner,
@@ -172,7 +172,7 @@ const generateReleaseNote = async (version) => {
 
   core.info(`Start create release for milestone ${milestone.title}`);
 
-  const issues = fetchIssues(
+  const issues = await fetchIssues(
     octokit, {
       owner: github.context.repo.owner,
       repo: github.context.repo.repo,
