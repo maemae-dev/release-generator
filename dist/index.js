@@ -42,67 +42,10 @@ run();
 const github = __nccwpck_require__(438);
 const core = __nccwpck_require__(186);
 
-let test = async (version) => {
-  if (typeof version !== "string") {
-    throw new Error("version not a string");
-  }
-  const token = core.getInput("token");
-  if (typeof token !== "string") {
-    throw new Error("token is not valid");
-  }
-  const octokit = github.getOctokit(token);
 
-  const branch = core.getInput("branch");
-  if (typeof branch !== "string") {
-    throw new Error("branch not a string");
-  }
-
-  for await (const response of octokit.paginate.iterator(
-    octokit.rest.issues.listMilestones,
-    {
-      owner: github.context.repo.owner,
-      repo: github.context.repo.repo,
-    }
-  )) {
-    const milestones = response.data.filter((m) => m.title === version);
-    if (milestones.length === 0) {
-      throw new Error("no results for milestones");
-    }
-    const milestone = milestones[0];
-
-    core.info(`Start create release for milestone ${milestone.title}`);
-
-    for await (const response of octokit.paginate.iterator(
-      octokit.rest.issues.listForRepo,
-      {
-        owner: github.context.repo.owner,
-        repo: github.context.repo.repo,
-        milestone: milestone.number,
-        state: "closed",
-        per_page: 100
-      }
-    )) {
-      const issues = response.data;
-      if (issues.length === 0) {
-        throw new Error("no results for issues");
-      }
-
-      const labels = issues
-        .map((issue) => issue.labels)
-        .flatMap((issue) => issue)
-        .reduce(
-          (labels, l) =>
-            labels.filter((v) => v.name === l.name).length > 0
-              ? labels
-              : labels.concat(l),
-          []
-        );
-      
-      const description = createDescription(labels);
-      await createRelease(version, branch, description);
-    }
-  }
-};
+const issueSentence = (issue) => {
+  return `- **${issue.title}** #${issue.number} by ${issue.user.login}\n`
+}
 
 const createDescription = (labels) => {  
   const labelSections = labels.reduce((body, label) => {
@@ -113,15 +56,15 @@ const createDescription = (labels) => {
           issue.labels.filter((issueLabel) => label.name === issueLabel.name)
             .length > 0
       )
-      .map((i) => `- **${issue.title}** #${issue.number} by ${issue.user.login}\n`);
+      .map((issue) => issueSentence(issue));
     const section = title.concat(...issuesForLabel);
     return body.concat(section);
   }, "")
 
   const labelEmptyIssues = issues
     .filter((issue) => issue.labels.length === 0)
-    .map((i) => `- **${issue.title}** #${issue.number} by ${issue.user.login}\n`);
-  
+    .map((issue) => issueSentence(issue));
+
   const title = "## label is empty\n";
   const emptySection = title.concat(...labelEmptyIssues);
   return labelSections + emptySection;
@@ -140,7 +83,127 @@ const createRelease = async (version, branch, body) => {
   });
 }
 
-module.exports = test;
+/**
+ * 
+ * @param {octokit} octokit
+ * @param {string} version 
+ * @param {
+ *   owner: string,
+ *   repo: string
+ * }  
+ * @returns milestone: object
+ */
+const fetchTargetMilestone = async (octokit, {version, owner, repo}) => {
+  const responses =  await octokit.paginate(
+    octokit.rest.issues.listMilestones,
+    {
+      owner: owner,
+      repo: repo,
+    }
+  );
+
+
+  const targetMilestone = responses.reduce((ms, response) => {
+    if(ms) return ms;
+    core.info({...response});
+    const milestones = response.filter((m) => m.title === version);
+
+    const milestone = milestones[0];
+    return milestone;
+  }, null);
+
+  if(!targetMilestone) {
+    throw new Error("milestone is not found");
+  }
+  return targetMilestone;
+}
+
+/**
+ * 
+ * @param {octokit} octokit
+ * @param {
+ *   owner: string,
+ *   repo: string
+ *   mileStoneNumber: string,
+ * }
+ * @returns issues: object[]
+ */
+const fetchIssues = async (
+    octokit, {
+      owner, 
+      repo, 
+      mileStoneNumber
+    }
+  ) => {
+  const responses = await octokit.paginate.iterator(
+    octokit.rest.issues.listForRepo,
+    {
+      owner: owner,
+      repo: repo,
+      milestone: mileStoneNumber,
+      state: "closed",
+      per_page: 100
+    }
+  )
+  core.info(`response length = ${responses.length}`);
+  return responses.map((res) => res.data).flat();
+}
+const generateReleaseNote = async (version) => {
+  if (typeof version !== "string") {
+    throw new Error("version not a string");
+  }
+  const token = core.getInput("token");
+  if (typeof token !== "string") {
+    throw new Error("token is not valid");
+  }
+  const octokit = github.getOctokit(token);
+
+  const branch = core.getInput("branch");
+  if (typeof branch !== "string") {
+    throw new Error("branch not a string");
+  }
+
+  const milestone = await fetchTargetMilestone(
+      octokit, {
+      version: version,
+      owner: github.context.repo.owner,
+      repo: github.context.repo.repo,
+    })
+
+  core.info(`Start create release for milestone ${milestone.title}`);
+
+  const issues = await fetchIssues(
+    octokit, {
+      owner: github.context.repo.owner,
+      repo: github.context.repo.repo,
+      mileStoneNumber: milestone.number,
+    }
+  )
+
+  core.info(`target length = ${issues.length}`);
+
+  if (issues.length === 0) {
+    throw new Error("no results for issues");
+  }
+
+  const labels = issues
+    .map((issue) => issue.labels)
+    .flatMap((issue) => issue)
+    .reduce(
+      (labels, l) =>
+        labels.filter((v) => v.name === l.name).length > 0
+          ? labels
+          : labels.concat(l),
+      []
+    );
+
+    core.info(`labels length = ${labels.length}`);
+    const description = createDescription(labels);
+    core.info(description);
+  // await createRelease(version, branch, description);
+};
+
+module.exports = generateReleaseNote;
 
 
 /***/ }),
