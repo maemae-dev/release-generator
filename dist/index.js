@@ -105,7 +105,7 @@ const fetchTargetMilestone = async (octokit, {version, owner, repo}) => {
 
   const targetMilestone = responses.reduce((ms, response) => {
     if(ms) return ms;
-    core.info(response);
+    core.info({...response});
     const milestones = response.filter((m) => m.title === version);
 
     const milestone = milestones[0];
