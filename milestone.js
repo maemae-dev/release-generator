@@ -135,6 +135,7 @@ const generateReleaseNote = async (version) => {
 
   const milestone = await fetchTargetMilestone(
       octokit, {
+      version: version,
       owner: github.context.repo.owner,
       repo: github.context.repo.repo,
     })
