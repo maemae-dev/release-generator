@@ -78,6 +78,7 @@ const createDescription = (issues) => {
     )) {
       const milestones = response.data.filter((m) => m.title === version);
       core.info(response.data[0].title);
+      core.info(version);
       if (milestones.length === 0) {
         return;
       }
