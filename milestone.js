@@ -5,7 +5,17 @@ const issueSentence = (issue) => {
   return `- **${issue.title}** #${issue.number} by ${issue.user.login}\n`
 }
 
-const createDescription = (labels) => {  
+const createDescription = (issues) => {
+  const labels = issues
+    .map((issue) => issue.labels)
+    .flatMap((issue) => issue)
+    .reduce(
+      (labels, l) =>
+        labels.filter((v) => v.name === l.name).length > 0
+          ? labels
+          : labels.concat(l),
+      []
+    );  
   const labelSections = labels.reduce((body, label) => {
     const title = `## ${label.name}: ${label.description}\n`;
     const issuesForLabel = issues
@@ -28,18 +38,18 @@ const createDescription = (labels) => {
   return labelSections + emptySection;
 }
 
-const createRelease = async (version, branch, body) => {
-  const version_without_v = version.slice(1, version.length)
-  return octokit.rest.repos.createRelease({
-    owner: github.context.repo.owner,
-    repo: github.context.repo.repo,
-    tag_name: version,
-    name: `Release ${version_without_v}`,
-    target_commitish: `${branch}`,
-    draft: true,
-    body: body,
-  });
-}
+// const createRelease = async (octokit, version, branch, body) => {
+//   const version_without_v = version.slice(1, version.length)
+//   return octokit.rest.repos.createRelease({
+//     owner: github.context.repo.owner,
+//     repo: github.context.repo.repo,
+//     tag_name: version,
+//     name: `Release ${version_without_v}`,
+//     target_commitish: `${branch}`,
+//     draft: true,
+//     body: body,
+//   });
+// }
 
 /**
  * 
@@ -51,23 +61,21 @@ const createRelease = async (version, branch, body) => {
  * }  
  * @returns milestone: object
  */
-const fetchTargetMilestone = async (octokit, {owner, repo}) => {
-  const responses =  await octokit.paginate.iterator(
+ const fetchTargetMilestone = async (octokit, {version, owner, repo}) => {
+  let milestone = null;
+  for await (const response of octokit.paginate.iterator(
     octokit.rest.issues.listMilestones,
     {
       owner: owner,
       repo: repo,
     }
-  );
-
-  const milestone = responses.reduce((milestone, response) => {
-    if(milestone) return milestone;
-    const milestones = response.data.filter((m) => m.title === version);
-
-    const milestone = milestones[0];
-    return milestone;
-  }, null);
-
+    )) {
+      const milestones = response.data.filter((m) => m.title === version);
+      if (milestones.length === 0) {
+        return;
+      }
+      milestone = milestones[0];
+    }
   if(!milestone) {
     throw new Error("milestone is not found");
   }
@@ -91,7 +99,8 @@ const fetchIssues = async (
       mileStoneNumber
     }
   ) => {
-  const responses = await octokit.paginate.iterator(
+  let responses = [];
+  for await (const response of octokit.paginate.iterator(
     octokit.rest.issues.listForRepo,
     {
       owner: owner,
@@ -100,9 +109,10 @@ const fetchIssues = async (
       state: "closed",
       per_page: 100
     }
-  )
-  core.info(`response length = ${responses.length}`);
-  return responses.map((res) => res.data).flat();
+  )) {
+    responses.push(...response.data);
+  }
+  return responses.flat();
 }
 
 const generateReleaseNote = async (version) => {
@@ -142,20 +152,9 @@ const generateReleaseNote = async (version) => {
     throw new Error("no results for issues");
   }
 
-  const labels = issues
-    .map((issue) => issue.labels)
-    .flatMap((issue) => issue)
-    .reduce(
-      (labels, l) =>
-        labels.filter((v) => v.name === l.name).length > 0
-          ? labels
-          : labels.concat(l),
-      []
-    );
 
-    core.info(`labels length = ${labels.length}`);
-    const description = createDescription(labels);
-    core.info(description);
+  const description = createDescription(issues);
+  core.info(description);
   // await createRelease(version, branch, description);
 };
 
