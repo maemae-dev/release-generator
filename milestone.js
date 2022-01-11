@@ -71,6 +71,7 @@ const createDescription = (issues) => {
     }
     )) {
       const milestones = response.data.filter((m) => m.title === version);
+      core.info(response.data);
       if (milestones.length === 0) {
         return;
       }
@@ -79,6 +80,7 @@ const createDescription = (issues) => {
   if(!milestone) {
     throw new Error("milestone is not found");
   }
+  core.info(milestone);
   return milestone;
 }
 
