@@ -44,18 +44,18 @@ const createDescription = (issues) => {
   return labelSections + emptySection;
 }
 
-const createRelease = async (octokit, version, branch, body) => {
-  const version_without_v = version.slice(1, version.length)
-  return octokit.rest.repos.createRelease({
-    owner: github.context.repo.owner,
-    repo: github.context.repo.repo,
-    tag_name: version,
-    name: `Release ${version_without_v}`,
-    target_commitish: `${branch}`,
-    draft: true,
-    body: body,
-  });
-}
+// const createRelease = async (octokit, version, branch, body) => {
+//   const version_without_v = version.slice(1, version.length)
+//   return octokit.rest.repos.createRelease({
+//     owner: github.context.repo.owner,
+//     repo: github.context.repo.repo,
+//     tag_name: version,
+//     name: `Release ${version_without_v}`,
+//     target_commitish: `${branch}`,
+//     draft: true,
+//     body: body,
+//   });
+// }
 
 /**
  * 
@@ -174,7 +174,8 @@ const generateReleaseNote = async (version) => {
       return `${des}${repositories[index]}\n${current}`;
     })
   })
-  await createRelease(version, branch, description);
+  core.info(description);
+  // await createRelease(version, branch, description);
 };
 
 module.exports = generateReleaseNote;
