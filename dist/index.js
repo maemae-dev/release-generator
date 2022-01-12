@@ -168,7 +168,11 @@ const generateReleaseNote = async (version) => {
   ]
 
   const description = await Promise.all(repositories.map(async repo => {
-    return await generateDescriptionFromRepository(octokit, version, repo);
+    return await generateDescriptionFromRepository(octokit, version, repo).catch(e => {
+      core.info(`error in ${repo}`);
+      core.info(e); 
+      return "";
+    });
   })).then((descriptions) => {
     return descriptions.reduce((des, current, index) => {
       return `${des}${repositories[index]}\n${current}`;
