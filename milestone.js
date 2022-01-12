@@ -163,7 +163,7 @@ const generateReleaseNote = async (version) => {
 
   const description = await Promise.all(repositories.map(async repo => {
     return await generateDescriptionFromRepository(octokit, version, repo).catch(e => {
-      core.info(`error in ${repo}`);
+      core.info(`error in ${github.context.repo.owner}/${repo}`);
       core.info(e); 
       return "";
     });
