@@ -44,18 +44,18 @@ const createDescription = (issues) => {
   return labelSections + emptySection;
 }
 
-// const createRelease = async (octokit, version, branch, body) => {
-//   const version_without_v = version.slice(1, version.length)
-//   return octokit.rest.repos.createRelease({
-//     owner: github.context.repo.owner,
-//     repo: github.context.repo.repo,
-//     tag_name: version,
-//     name: `Release ${version_without_v}`,
-//     target_commitish: `${branch}`,
-//     draft: true,
-//     body: body,
-//   });
-// }
+const createRelease = async (octokit, version, branch, body) => {
+  const version_without_v = version.slice(1, version.length)
+  return octokit.rest.repos.createRelease({
+    owner: github.context.repo.owner,
+    repo: github.context.repo.repo,
+    tag_name: version,
+    name: `Release ${version_without_v}`,
+    target_commitish: `${branch}`,
+    draft: true,
+    body: body,
+  });
+}
 
 /**
  * 
@@ -77,8 +77,6 @@ const createDescription = (issues) => {
     }
     )) {
       const milestones = response.data.filter((m) => m.title === version);
-      core.info(response.data[0].title);
-      core.info(version);
       if (milestones.length === 0) {
         return;
       }
@@ -87,7 +85,6 @@ const createDescription = (issues) => {
   if(!milestone) {
     throw new Error("milestone is not found");
   }
-  core.info(milestone);
   return milestone;
 }
 
@@ -156,16 +153,13 @@ const generateReleaseNote = async (version) => {
     }
   )
 
-  core.info(`target length = ${issues.length}`);
-
   if (issues.length === 0) {
     throw new Error("no results for issues");
   }
 
 
   const description = createDescription(issues);
-  core.info(description);
-  // await createRelease(version, branch, description);
+  await createRelease(version, branch, description);
 };
 
 module.exports = generateReleaseNote;
