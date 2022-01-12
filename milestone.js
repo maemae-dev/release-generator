@@ -33,23 +33,23 @@ const createDescription = (issues) => {
     .filter((issue) => issue.labels.length === 0)
     .map((issue) => issueSentence(issue));
 
-  const title = "## label is empty\n";
+  const title = "## Label is empty\n";
   const emptySection = title.concat(...labelEmptyIssues);
   return labelSections + emptySection;
 }
 
-// const createRelease = async (octokit, version, branch, body) => {
-//   const version_without_v = version.slice(1, version.length)
-//   return octokit.rest.repos.createRelease({
-//     owner: github.context.repo.owner,
-//     repo: github.context.repo.repo,
-//     tag_name: version,
-//     name: `Release ${version_without_v}`,
-//     target_commitish: `${branch}`,
-//     draft: true,
-//     body: body,
-//   });
-// }
+const createRelease = async (octokit, version, branch, body) => {
+  const version_without_v = version.slice(1, version.length)
+  return octokit.rest.repos.createRelease({
+    owner: github.context.repo.owner,
+    repo: github.context.repo.repo,
+    tag_name: version,
+    name: `Release ${version_without_v}`,
+    target_commitish: `${branch}`,
+    draft: true,
+    body: body,
+  });
+}
 
 /**
  * 
@@ -162,18 +162,14 @@ const generateReleaseNote = async (version) => {
   ]
 
   const description = await Promise.all(repositories.map(async repo => {
-    return await generateDescriptionFromRepository(octokit, version, repo).catch(e => {
-      core.info(`error in ${github.context.repo.owner}/${repo}`);
-      core.info(e); 
-      return "";
-    });
+    return await generateDescriptionFromRepository(octokit, version, repo);
   })).then((descriptions) => {
     return descriptions.reduce((des, current, index) => {
-      return `${des}${repositories[index]}\n${current}`;
+      return `${des}${repositories[index]}\n\n# ${current}`;
     })
   })
-  core.info(description);
-  // await createRelease(version, branch, description);
+
+  await createRelease(version, branch, description);
 };
 
 module.exports = generateReleaseNote;
