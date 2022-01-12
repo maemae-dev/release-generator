@@ -121,6 +121,31 @@ const fetchIssues = async (
   return responses.flat();
 }
 
+const generateDescriptionFromRepository = async (octokit, version, repository) => {
+  const milestone = await fetchTargetMilestone(
+    octokit, {
+    version: version,
+    owner: github.context.repo.owner,
+    repo: repository,
+  })
+
+  core.info(`Start create release for milestone ${milestone.title}`);
+
+  const issues = await fetchIssues(
+    octokit, {
+      owner: github.context.repo.owner,
+      repo: repository,
+      mileStoneNumber: milestone.number,
+    }
+  )
+
+  if (issues.length === 0) {
+    throw new Error("no results for issues");
+  }
+
+  return createDescription(issues);
+}
+
 const generateReleaseNote = async (version) => {
   if (typeof version !== "string") {
     throw new Error("version not a string");
@@ -136,29 +161,19 @@ const generateReleaseNote = async (version) => {
     throw new Error("branch not a string");
   }
 
-  const milestone = await fetchTargetMilestone(
-      octokit, {
-      version: version,
-      owner: github.context.repo.owner,
-      repo: github.context.repo.repo,
+  const repositories = [
+    github.context.repo.repo,
+    "zefyr",
+    "hokuto-functions"  
+  ]
+
+  const description = await Promise.all(repositories.map(async repo => {
+    return await generateDescriptionFromRepository(octokit, version, repo);
+  })).then((descriptions) => {
+    return descriptions.reduce((des, current, index) => {
+      return `${des}${repositories[index]}\n${current}`;
     })
-
-  core.info(`Start create release for milestone ${milestone.title}`);
-
-  const issues = await fetchIssues(
-    octokit, {
-      owner: github.context.repo.owner,
-      repo: github.context.repo.repo,
-      mileStoneNumber: milestone.number,
-    }
-  )
-
-  if (issues.length === 0) {
-    throw new Error("no results for issues");
-  }
-
-
-  const description = createDescription(issues);
+  })
   await createRelease(version, branch, description);
 };
 
