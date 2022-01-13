@@ -170,6 +170,7 @@ const generateReleaseNote = async (version) => {
   })
 
   await createRelease(octokit, version, branch, description);
+  return description;
 };
 
 module.exports = generateReleaseNote;
