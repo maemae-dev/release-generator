@@ -180,7 +180,17 @@ const generateReleaseNote = async (version) => {
   })
 
   await createRelease(octokit, version, branch, description);
-  return description;
+  await fetch('https://hooks.zapier.com/hooks/catch/11137744/b9i402e/', {
+    method: 'POST',
+    mode: 'cors',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      version,
+      description,
+    })
+  })
 };
 
 module.exports = generateReleaseNote;
