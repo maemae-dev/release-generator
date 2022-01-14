@@ -123,6 +123,8 @@ const generateDescriptionFromRepository = async (octokit, version, repository) =
     repo: repository,
   })
 
+  core.info(repository);
+  core.info(milestone);
   core.info(`Start create release for milestone ${milestone.title}`);
 
   const issues = await fetchIssues(
