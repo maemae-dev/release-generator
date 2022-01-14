@@ -77,6 +77,7 @@ const createRelease = async (octokit, version, branch, body) => {
       milestone = milestones[0];
     }
   if(!milestone) {
+    core.info(`${repo} has not '${version}' milestone`)
     throw new Error("milestone is not found");
   }
   return milestone;
@@ -123,8 +124,9 @@ const generateDescriptionFromRepository = async (octokit, version, repository) =
     repo: repository,
   })
 
-  core.info(repository);
-  core.info(milestone);
+  if(!milestone) {
+    return '';
+  }
   core.info(`Start create release for milestone ${milestone.title}`);
 
   const issues = await fetchIssues(
