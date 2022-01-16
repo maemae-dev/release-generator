@@ -1,5 +1,6 @@
 const github = require("@actions/github");
 const core = require("@actions/core");
+const fetch = require("node-fetch")
 
 const issueSentence = (issue) => {
   return `- **${issue.title}** #${issue.number} by ${issue.user.login}\n`

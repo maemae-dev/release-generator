@@ -6,6 +6,7 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 
 const github = __nccwpck_require__(5438);
 const core = __nccwpck_require__(2186);
+const fetch = __nccwpck_require__(467)
 
 const issueSentence = (issue) => {
   return `- **${issue.title}** #${issue.number} by ${issue.user.login}\n`
