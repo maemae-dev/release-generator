@@ -9,7 +9,7 @@ const core = __nccwpck_require__(2186);
 const fetch = __nccwpck_require__(467)
 
 const issueSentence = (issue) => {
-  return `- **${issue.title}** #${issue.number} by ${issue.user.login}\n`
+  return `- ${issue.title} by ${issue.user.login}\n`
 }
 
 const createDescription = (issues) => {
@@ -177,7 +177,7 @@ const generateReleaseNote = async (version) => {
   })).then((descriptions) => {
     return descriptions.reduce((des, current, index) => {
       return `${des}\n# ${repositories[index]}\n${current}`;
-    })
+    }, `# ${repositories[0]}`)
   })
 
   await createRelease(octokit, version, branch, description);

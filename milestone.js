@@ -3,7 +3,7 @@ const core = require("@actions/core");
 const fetch = require("node-fetch")
 
 const issueSentence = (issue) => {
-  return `- **${issue.title}** #${issue.number} by ${issue.user.login}\n`
+  return `- ${issue.title} by ${issue.user.login}\n`
 }
 
 const createDescription = (issues) => {
@@ -171,7 +171,7 @@ const generateReleaseNote = async (version) => {
   })).then((descriptions) => {
     return descriptions.reduce((des, current, index) => {
       return `${des}\n# ${repositories[index]}\n${current}`;
-    })
+    }, `# ${repositories[0]}`)
   })
 
   await createRelease(octokit, version, branch, description);
