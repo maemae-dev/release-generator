@@ -171,7 +171,7 @@ const generateReleaseNote = async (version) => {
   })).then((descriptions) => {
     return descriptions.reduce((des, current, index) => {
       return `${des}\n# ${repositories[index]}\n${current}`;
-    }, `# ${repositories[0]}`)
+    }, '')
   })
 
   await createRelease(octokit, version, branch, description);
